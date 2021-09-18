@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common'
-import { CreateCourseDto } from './dto/create-course.dto'
-import { UpdateCourseDto } from './dto/update-course.dto'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { Course } from './entities/course.entity'
 
 @Injectable()
 export class CoursesService {
-  create(createCourseDto: CreateCourseDto) {
-    return 'This action adds a new course'
+  constructor(
+    @InjectRepository(Course)
+    private coursesRepository: Repository<Course>
+  ) {}
+
+  async findAll() {
+    const course = await this.coursesRepository.find({ relations: ['department'] })
+    return course
   }
 
-  findAll() {
-    return `This action returns all courses`
+  async findOne(id: number) {
+    return await this.coursesRepository.findOne(id, { relations: ['department'] })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} course`
-  }
-
-  update(id: number, updateCourseDto: UpdateCourseDto) {
-    return `This action updates a #${id} course`
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} course`
+  async findOneWithComments(id: number) {
+    const course = await this.coursesRepository.findOne(id, {
+      relations: ['comments', 'department']
+    })
+    return course
   }
 }
