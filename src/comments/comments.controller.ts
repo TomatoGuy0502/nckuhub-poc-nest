@@ -1,16 +1,24 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+  UseGuards,
+  Request,
+  ForbiddenException
+} from '@nestjs/common'
 import { CommentsService } from './comments.service'
 import { CreateCommentDto } from './dto/create-comment.dto'
 import { UpdateCommentDto } from './dto/update-comment.dto'
+import { AuthGuard } from '@nestjs/passport'
 
 @Controller('comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
-
-  @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(createCommentDto)
-  }
 
   @Get()
   findAll(@Query('userId') userId: string) {
@@ -25,13 +33,36 @@ export class CommentsController {
     return this.commentsService.findOne(+id)
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Post()
+  create(@Body() createCommentDto: CreateCommentDto, @Request() req) {
+    const { uid } = req.user
+    return this.commentsService.create(uid, createCommentDto)
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateCommentDto: UpdateCommentDto,
+    @Request() req
+  ) {
+    const { uid } = req.user
+    const data = await this.commentsService.findOne(+id)
+    if (uid !== data.userId) {
+      throw new ForbiddenException()
+    }
     return this.commentsService.update(+id, updateCommentDto)
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string, @Request() req) {
+    const { uid } = req.user
+    const data = await this.commentsService.findOne(+id)
+    if (uid !== data.userId) {
+      throw new ForbiddenException()
+    }
     return this.commentsService.remove(+id)
   }
 }

@@ -5,5 +5,4 @@ export class CreateCommentDto {
   cold: number
   semester: string
   courseId: number
-  userId: string
 }

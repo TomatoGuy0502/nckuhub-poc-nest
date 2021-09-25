@@ -12,7 +12,7 @@ export class CommentsService {
     private commentRepository: Repository<Comment>
   ) {}
 
-  async create(createCommentDto: CreateCommentDto) {
+  async create(userId: string, createCommentDto: CreateCommentDto) {
     const comment = new Comment()
     comment.text = createCommentDto.text
     comment.got = createCommentDto.got
@@ -20,7 +20,7 @@ export class CommentsService {
     comment.cold = createCommentDto.cold
     comment.semester = createCommentDto.semester
     comment.courseId = createCommentDto.courseId
-    comment.userId = createCommentDto.userId
+    comment.userId = userId
     return await this.commentRepository.save(comment)
   }
 
@@ -35,17 +35,12 @@ export class CommentsService {
     })
   }
 
-  findOne(id: number) {
+  findOne(id: number): Promise<Comment> {
     return this.commentRepository.findOne(id)
   }
 
   async update(id: number, updateCommentDto: UpdateCommentDto) {
-    return await this.commentRepository.update(
-      { id },
-      {
-        ...updateCommentDto
-      }
-    )
+    return await this.commentRepository.update({ id }, updateCommentDto)
   }
 
   async remove(id: number) {
